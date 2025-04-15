@@ -23,5 +23,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "build"
+  "build",
+  "tox"
 ]
