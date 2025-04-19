@@ -15,6 +15,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install tox
 
+      - run:
+          name: Export Gemfury credentials from env
+          command: |
+            echo "GEMFURY_USERNAME=$GEMFURY_USERNAME" >> .env
+            echo "GEMFURY_PASSWORD=$GEMFURY_PASSWORD" >> .env
+
 workflows:
   version: 2
   test-and-build:
