@@ -26,6 +26,6 @@ workflows:
   test-and-build:
     jobs:
       - test
-      - build-image:
-          requires:
-            - test
+      # - build-image:
+      #     requires:
+      #       - test
