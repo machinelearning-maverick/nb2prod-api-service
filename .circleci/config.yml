@@ -21,6 +21,9 @@ jobs:
             echo "GEMFURY_USERNAME=$GEMFURY_USERNAME" >> .env
             echo "GEMFURY_PASSWORD=$GEMFURY_PASSWORD" >> .env
 
+      - run:
+          name: Run tox
+          command: ./run_tests_with_env.sh
 workflows:
   version: 2
   test-and-build:
