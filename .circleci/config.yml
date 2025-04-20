@@ -58,8 +58,8 @@ jobs:
             TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
             IMAGE_WITH_TAG=nb2prod-api-service:$TAG
 
-            docker push $DOCKER_USER/IMAGE_WITH_TAG
-            docker tag $DOCKER_USER/IMAGE_WITH_TAG \
+            docker push $DOCKER_USER/$IMAGE_WITH_TAG
+            docker tag $DOCKER_USER/$IMAGE_WITH_TAG \
                        $DOCKER_USER/nb2prod-api-service:latest
             docker push $DOCKER_USER/nb2prod-api-service:latest
 
