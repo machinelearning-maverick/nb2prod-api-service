@@ -42,8 +42,12 @@ jobs:
           command: |
             TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
             IMAGE_TAG=nb2prod-api-service:$TAG
-            docker build -t "$DOCKER_USER/$IMAGE_TAG" .
-            docker tag "$DOCKER_USER/$IMAGE_TAG" "$DOCKER_USER/nb2prod-api-service:latest"
+            # docker build -t "$DOCKER_USER/$IMAGE_TAG" .
+            # docker tag "$DOCKER_USER/$IMAGE_TAG" "$DOCKER_USER/nb2prod-api-service:latest"
+            echo -e "GEMFURY_USERNAME=$GEMFURY_USERNAME\nGEMFURY_PASSWORD=$GEMFURY_PASSWORD" > envfile
+            DOCKER_BUILDKIT=1 docker build \
+              --secret id=env,src=envfile \
+              -t "$DOCKER_USER/nb2prod-api-service:$TAG" .
 
       - run:
           name: Push Docker image
