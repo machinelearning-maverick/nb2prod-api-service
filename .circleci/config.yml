@@ -40,7 +40,8 @@ jobs:
       - run:
           name: Build & tag Docker image
           command: |
-            IMAGE_TAG=nb2prod-api-service:${CIRCLE_BRANCH}
+            TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
+            IMAGE_TAG=nb2prod-api-service:$TAG
             docker build -t "$DOCKER_USER/$IMAGE_TAG" .
             docker tag "$DOCKER_USER/$IMAGE_TAG" "$DOCKER_USER/nb2prod-api-service:latest"
 
