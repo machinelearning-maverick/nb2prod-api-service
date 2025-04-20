@@ -22,7 +22,9 @@ COPY .env .env
 # Export env vars from .env (for Gemfury)
 RUN --mount=type=secret,id=env \
     export $(cat /run/secrets/env | grep -v '^#' | xargs) && \
-    pip install --extra-index-url https://${GEMFURY_USERNAME}:${GEMFURY_PASSWORD}@pypi.fury.io/${GEMFURY_USERNAME}/ -r requirements.txt
+    pip install --extra-index-url \
+    "https://${GEMFURY_USERNAME}:${GEMFURY_PASSWORD}@pypi.fury.io/${GEMFURY_USERNAME}/" \
+    -r requirements.txt
 
 # --- Final stage ---
 FROM base
