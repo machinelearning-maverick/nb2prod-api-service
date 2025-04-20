@@ -89,14 +89,14 @@ workflows:
       - build-and-push:
           requires:
             - test
-          # filters:
-          #   branches:
-          #     only:
-          #       - main
+          filters:
+            branches:
+              only:
+                - main
       - redeploy-railway-docker-image-changed:
           requires:
             - build-and-push
-          # filters:
-          #   branches:
-          #     only:
-          #       - main
+          filters:
+            branches:
+              only:
+                - main
