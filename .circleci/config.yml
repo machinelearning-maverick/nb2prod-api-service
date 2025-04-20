@@ -4,22 +4,74 @@ jobs:
   test:
     docker:
       - image: cimg/python:3.11
-    environment:
-      DOCKER_BUILDKIT: "1"
     steps:
       - checkout
 
       - run:
-        name: Install dependencies
-        command: |
-          python -m pip install --upgrade pip
-          pip install tox
+          name: Install dependencies
+          command: |
+            python -m pip install --upgrade pip
+            pip install tox
+
+      - run:
+          name: Export Gemfury credentials from env
+          command: |
+            echo "GEMFURY_USERNAME=$GEMFURY_USERNAME" >> .env
+            echo "GEMFURY_PASSWORD=$GEMFURY_PASSWORD" >> .env
+
+      - run:
+          name: Run tox
+          command: ./run_tests_with_env.sh
+
+  build-and-push:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Login to Docker Hub
+          command: |
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+      - run:
+          name: Prepare envfile
+          command: |
+            printf "GEMFURY_USERNAME=%s\nGEMFURY_PASSWORD=%s\n" \
+              "$GEMFURY_USERNAME" "$GEMFURY_PASSWORD" > envfile
+
+      - run:
+          name: Build & tag Docker image
+          command: |
+            export DOCKER_BUILDKIT=1
+            TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
+            IMAGE_WITH_TAG=nb2prod-api-service:$TAG
+
+            docker build \
+              --secret id=env,src=envfile \
+              -t $DOCKER_USER/$IMAGE_WITH_TAG .
+
+      - run:
+          name: Push Docker image
+          command: |
+            TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
+            IMAGE_WITH_TAG=nb2prod-api-service:$TAG
+
+            docker push $DOCKER_USER/nb2prod-api-service:$TAG
+            docker tag $DOCKER_USER/nb2prod-api-service:$TAG \
+                       $DOCKER_USER/nb2prod-api-service:latest
+            docker push $DOCKER_USER/nb2prod-api-service:latest
 
 workflows:
   version: 2
-  test-and-build:
+  test-build-and-deploy:
     jobs:
       - test
-      - build-image:
-        requires:
-          - test
+      - build-and-push:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - main
