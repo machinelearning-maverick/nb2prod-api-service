@@ -30,9 +30,7 @@ jobs:
       - image: cimg/python:3.11
     steps:
       - checkout
-
-      - setup_remote_docker:
-          version: 20.10.18
+      - setup_remote_docker
 
       - run:
           name: Login to Docker Hub
