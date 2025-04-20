@@ -4,8 +4,8 @@ jobs:
   test:
     docker:
       - image: cimg/python:3.11
-    environment:
-      DOCKER_BUILDKIT: "1"
+    # environment:
+      # DOCKER_BUILDKIT: "1"
     steps:
       - checkout
 
@@ -38,23 +38,40 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
       - run:
+          name: Prepare envfile
+          command: |
+            printf "GEMFURY_USERNAME=%s\nGEMFURY_PASSWORD=%s\n" \
+              "$GEMFURY_USERNAME" "$GEMFURY_PASSWORD" > envfile
+
+      - run:
           name: Build & tag Docker image
           command: |
+            export DOCKER_BUILDKIT=1
             TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
-            IMAGE_TAG=nb2prod-api-service:$TAG
+            IMAGE_WITH_TAG=nb2prod-api-service:$TAG
+
             # docker build -t "$DOCKER_USER/$IMAGE_TAG" .
             # docker tag "$DOCKER_USER/$IMAGE_TAG" "$DOCKER_USER/nb2prod-api-service:latest"
-            echo -e "GEMFURY_USERNAME=$GEMFURY_USERNAME\nGEMFURY_PASSWORD=$GEMFURY_PASSWORD" > envfile
-            DOCKER_BUILDKIT=1 docker build \
+            # echo -e "GEMFURY_USERNAME=$GEMFURY_USERNAME\nGEMFURY_PASSWORD=$GEMFURY_PASSWORD" > envfile
+
+            docker build \
               --secret id=env,src=envfile \
-              -t "$DOCKER_USER/nb2prod-api-service:$TAG" .
+              -t $DOCKER_USER/$IMAGE_WITH_TAG .
+
+            # DOCKER_BUILDKIT=1 docker build \
+            #   --secret id=env,src=envfile \
+            #   -t "$DOCKER_USER/$IMAGE_WITH_TAG" .
 
       - run:
           name: Push Docker image
           command: |
             TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
-            docker push "$DOCKER_USER/nb2prod-api-service:$TAG"
-            docker push "$DOCKER_USER/nb2prod-api-service:latest"
+            IMAGE_WITH_TAG=nb2prod-api-service:$TAG
+
+            docker push $DOCKER_USER/nb2prod-api-service:$TAG
+            docker tag $DOCKER_USER/nb2prod-api-service:$TAG \
+                       $DOCKER_USER/nb2prod-api-service:latest
+            docker push $DOCKER_USER/nb2prod-api-service:latest
 
 workflows:
   version: 2
