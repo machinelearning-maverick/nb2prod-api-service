@@ -58,10 +58,28 @@ jobs:
             TAG=${CIRCLE_BRANCH//[^a-zA-Z0-9_.-]/-}
             IMAGE_WITH_TAG=nb2prod-api-service:$TAG
 
-            docker push $DOCKER_USER/nb2prod-api-service:$TAG
-            docker tag $DOCKER_USER/nb2prod-api-service:$TAG \
+            docker push $DOCKER_USER/IMAGE_WITH_TAG
+            docker tag $DOCKER_USER/IMAGE_WITH_TAG \
                        $DOCKER_USER/nb2prod-api-service:latest
             docker push $DOCKER_USER/nb2prod-api-service:latest
+
+  redeploy-railway-docker-image-changed:
+    docker:
+      - image: curlimages/curl:latest
+    steps:
+      - run:
+          name: Trigger Railway Service Redeploy
+          command: |
+            curl -X POST https://backboard.railway.app/graphql/v2 \
+              -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "query": "mutation serviceInstanceRedeploy($environmentId: String!, $serviceId: String!) { serviceInstanceRedeploy(environmentId: $environmentId, serviceId: $serviceId) }",
+                "variables": {
+                  "environmentId": "'"$RAILWAY_ENVIRONMENT_ID"'",
+                  "serviceId": "'"$RAILWAY_SERVICE_ID"'"
+                }
+              }'
 
 workflows:
   version: 2
@@ -71,7 +89,14 @@ workflows:
       - build-and-push:
           requires:
             - test
-          filters:
-            branches:
-              only:
-                - main
+          # filters:
+          #   branches:
+          #     only:
+          #       - main
+      - redeploy-railway-docker-image-changed:
+          requires:
+            - build-and-push
+          # filters:
+          #   branches:
+          #     only:
+          #       - main
